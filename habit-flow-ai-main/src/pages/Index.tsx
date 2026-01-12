@@ -5,6 +5,8 @@ import { NotesSection } from '@/components/NotesSection';
 import { MonthTabs } from '@/components/MonthTabs';
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const currentDate = new Date();
@@ -38,11 +40,17 @@ const Index = () => {
       {/* Header */}
       <header className="bg-primary text-primary-foreground py-4 px-6">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <h1 className="text-lg md:text-xl font-bold tracking-wide" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
-            🎯 Progress your Success with <span className="text-primary-foreground/90">HabitTracker</span>
-          </h1>
-          <div className="text-sm font-medium opacity-90">
-            📅 {formattedDate}
+          <div className="flex items-center gap-4">
+            {/** show current user name if available */}
+            <UserBadge />
+            <h1 className="text-lg md:text-xl font-bold tracking-wide" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+              🎯 Progress your Success with <span className="text-primary-foreground/90">HabitTracker</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-sm font-medium opacity-90">📅 {formattedDate}</div>
+            <AdminLink />
+            <SignOutButton />
           </div>
         </div>
       </header>
@@ -226,3 +234,35 @@ const Index = () => {
 };
 
 export default Index;
+
+function UserBadge() {
+  const { currentUser } = useAuth();
+  if (!currentUser) return null;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">{currentUser.name?.charAt(0) ?? 'U'}</div>
+      <div className="text-sm font-medium">{currentUser.name}</div>
+    </div>
+  );
+}
+
+function SignOutButton() {
+  const { logout, currentUser } = useAuth();
+  const navigate = useNavigate();
+  if (!currentUser) return null;
+  const doLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+  return (
+    <button onClick={doLogout} className="text-sm bg-white/10 px-3 py-1 rounded">Sign out</button>
+  );
+}
+
+function AdminLink() {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) return null;
+  return (
+    <a href="/admin" className="text-sm bg-white/10 px-3 py-1 rounded">Admin</a>
+  );
+}
