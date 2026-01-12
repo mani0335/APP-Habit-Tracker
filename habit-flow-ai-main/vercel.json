@@ -1,8 +1,5 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "scripts": {
-    "start": "npx serve dist -p 3000"
-  }
+  ]
 }
