@@ -33,10 +33,9 @@ function DynamicAppLoader() {
 		import("./App")
 			.then((mod) => {
 				if (!mounted) return;
-				setAppComp(() => mod.default ?? null);
+				setAppComp(() => (mod.default ?? null));
 			})
 			.catch((err) => {
-				// capture import/runtime errors
 				console.error("Dynamic import error:", err);
 				setError(err instanceof Error ? err : new Error(String(err)));
 			});

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-# Daily-Report
-=======
-# Welcome to your  project
+# Habit Flow AI
 
 ## Project info
 
@@ -10,7 +7,6 @@
 ## How can I edit this code?
 
 There are several ways of editing your application.
-# Habit Flow AI
 
 **What this website is**
 - **Description:** Habit Flow AI is a lightweight habit-tracking web app for tracking daily habits, viewing progress charts, and taking notes. The frontend is built with React + Vite and includes an example Express server in `server/` for local/demo user persistence.
@@ -22,7 +18,7 @@ There are several ways of editing your application.
 
 **What it uses**
 - **Frontend:** Vite, React, TypeScript, React Router, TanStack Query, Tailwind CSS, shadcn-style UI components.
-- **Backend (example):** Minimal Express server in [server/index.js](server/index.js) that reads/writes `server/users.json` (demo only).
+- **Backend (example):** Minimal Express server in `server/index.js` that reads/writes `server/users.json` (demo only).
 
 **Admin part**
 - **Access:** Only authenticated admin users can access `/admin` (enforced by the frontend `RequireAdmin` guard).
@@ -68,3 +64,4 @@ npm run start
 - Example server: [server/index.js](server/index.js)
 
 If you'd like, I can help: migrate the demo server to a hosted backend, integrate Supabase/Firebase for auth and shared storage, or prepare a Vercel deployment with serverless functions — tell me which option you prefer and I'll implement the next steps.
+
