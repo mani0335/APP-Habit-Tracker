@@ -27,6 +27,28 @@ app.get('/users', (req, res) => {
   res.json(users);
 });
 
+// Server-Sent Events (SSE) - allows admin UI to receive live updates
+const clients = [];
+
+app.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders && res.flushHeaders();
+
+  const clientId = Date.now();
+  const newClient = { id: clientId, res };
+  clients.push(newClient);
+
+  // send a comment to keep connection alive
+  res.write(': connected\n\n');
+
+  req.on('close', () => {
+    const idx = clients.findIndex((c) => c.id === clientId);
+    if (idx !== -1) clients.splice(idx, 1);
+  });
+});
+
 app.post('/users', (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email) return res.status(400).json({ error: 'name and email required' });
@@ -44,6 +66,16 @@ app.post('/users', (req, res) => {
 
   users.push(newUser);
   writeUsers(users);
+  // broadcast to connected SSE clients
+  const payload = JSON.stringify(newUser);
+  clients.forEach((c) => {
+    try {
+      c.res.write(`event: user-registered\ndata: ${payload}\n\n`);
+    } catch (e) {
+      // ignore individual client errors
+    }
+  });
+
   res.status(201).json(newUser);
 });
 

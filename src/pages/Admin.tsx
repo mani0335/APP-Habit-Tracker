@@ -26,6 +26,38 @@ const Admin = () => {
     return () => { mounted = false };
   }, []);
 
+  // Listen for server-sent events so admin sees registrations in real-time
+  useEffect(() => {
+    const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`${API_BASE}/events`);
+    } catch (e) {
+      es = null;
+    }
+
+    if (!es) return;
+
+    const onUser = (ev: MessageEvent) => {
+      try {
+        const data = JSON.parse(ev.data) as User;
+        setUsers((u) => [data, ...u]);
+        // show a small transient notification
+        setRecentNotif({ id: data.id, text: `${data.name} registered` });
+        setTimeout(() => setRecentNotif(null), 4000);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    es.addEventListener('user-registered', onUser as EventListener);
+    return () => {
+      es && es.close();
+    };
+  }, []);
+
+  const [recentNotif, setRecentNotif] = useState<{ id: string; text: string } | null>(null);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = users.filter((u) => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
@@ -62,6 +94,14 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen p-6 relative overflow-hidden">
+      {recentNotif && (
+        <div className="fixed top-6 right-6 z-50">
+          <div className="px-4 py-2 bg-white/95 backdrop-blur rounded-lg shadow-lg border flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="text-sm font-medium">{recentNotif.text}</div>
+          </div>
+        </div>
+      )}
       <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: `url(${bgUrl})` }} />
       <div className="max-w-6xl mx-auto relative">
         <div className="flex items-center justify-between mb-6">
