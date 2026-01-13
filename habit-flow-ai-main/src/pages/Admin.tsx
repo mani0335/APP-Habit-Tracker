@@ -11,8 +11,19 @@ const Admin = () => {
   const [sortNewest, setSortNewest] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem("hf_users");
-    if (raw) setUsers(JSON.parse(raw));
+    const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+    let mounted = true;
+    fetch(`${API_BASE}/users`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => {
+        if (!mounted) return;
+        setUsers(data || []);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setUsers([]);
+      });
+    return () => { mounted = false };
   }, []);
 
   const filtered = useMemo(() => {
@@ -23,9 +34,18 @@ const Admin = () => {
   }, [users, query, sortNewest]);
 
   const handleDelete = (id: string) => {
-    const filtered = users.filter((u) => u.id !== id);
-    setUsers(filtered);
-    localStorage.setItem("hf_users", JSON.stringify(filtered));
+    const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+    fetch(`${API_BASE}/users/${id}`, { method: 'DELETE' })
+      .then((r) => {
+        if (!r.ok) throw new Error('delete failed');
+        const filtered = users.filter((u) => u.id !== id);
+        setUsers(filtered);
+      })
+      .catch(() => {
+        // optimistic fallback: still remove locally
+        const filtered = users.filter((u) => u.id !== id);
+        setUsers(filtered);
+      });
   };
 
   const exportCsv = () => {

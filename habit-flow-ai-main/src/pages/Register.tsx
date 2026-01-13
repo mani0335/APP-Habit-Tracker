@@ -17,34 +17,34 @@ const Register = () => {
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const usersRaw = localStorage.getItem("hf_users");
-    const users: User[] = usersRaw ? JSON.parse(usersRaw) : [];
+    try {
+      const resp = await fetch(`${API_BASE}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password: btoa(password) }),
+      });
 
-    const existingUser = users.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase()
-    );
+      if (resp.status === 409) {
+        setError("An account with this email already exists. Please login.");
+        return;
+      }
 
-    if (existingUser) {
-      setError("An account with this email already exists. Please login.");
-      return;
+      if (!resp.ok) {
+        const j = await resp.json().catch(() => ({}));
+        setError(j.error || "Failed to register user");
+        return;
+      }
+
+      navigate("/login", { replace: true });
+    } catch (err) {
+      setError("Network error while registering user");
     }
-
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password: btoa(password), // basic encoding
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    localStorage.setItem("hf_users", JSON.stringify(users));
-
-    navigate("/login", { replace: true });
   };
 
   // public image path

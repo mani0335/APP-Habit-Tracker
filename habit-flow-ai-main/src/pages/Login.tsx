@@ -19,35 +19,43 @@ const Login: React.FC = () => {
     if (isAuthenticated) navigate("/", { replace: true });
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
-    const usersRaw = localStorage.getItem("hf_users");
-    const users = usersRaw ? JSON.parse(usersRaw) : [];
-    const user = users.find(
-      (u: any) => u.email === email.trim().toLowerCase()
-    );
+    try {
+      const resp = await fetch(`${API_BASE}/users`);
+      if (!resp.ok) {
+        setError("Failed to fetch users");
+        return;
+      }
+      const users = await resp.json();
+      const user = (users || []).find((u: any) => u.email === email.trim().toLowerCase());
 
-    if (!user) {
-      setError("No account found for this email. Please register first.");
-      return;
+      if (!user) {
+        setError("No account found for this email. Please register first.");
+        return;
+      }
+
+      if (user.password && user.password !== btoa(password)) {
+        setError("Invalid credentials");
+        return;
+      }
+
+      const adminEmail = "pasulamanish0335@gmail.com";
+      const isAdmin = email.trim().toLowerCase() === adminEmail;
+
+      login(
+        { id: user.id, name: user.name, email: user.email },
+        isAdmin
+      );
+
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError("Network error while signing in");
     }
-
-    if (user.password && user.password !== btoa(password)) {
-      setError("Invalid credentials");
-      return;
-    }
-
-    const adminEmail = "pasulamanish0335@gmail.com";
-    const isAdmin = email.trim().toLowerCase() === adminEmail;
-
-    login(
-      { id: user.id, name: user.name, email: user.email },
-      isAdmin
-    );
-
-    navigate("/", { replace: true });
   };
 
   return (
